@@ -4,8 +4,12 @@
 A concise summary of the vulnerability should be provided here. This section must include:
 - **Affected Software:** Apache
 - **Description:** Certain versions of Apache allow remote users to cause a denial-of-service (DoS) attack by crafting a cookie that exploits a NULL pointer dereference vulnerability.
+- **Author:** Chris REal0day Magistrado
+  - [Security Blog](https://REal0day.com)
+  - [LinkedIn](https://linkedin.com/in/cmagistrado)
 
 ## 1. Vulnerability Overview
+![Apache](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgm6T0bU5gevWfQqrcJcRruTmZoXP6DeNrSQ&s)
 - **CVE Identifier:** CVE-2021-26690
 - **Affected Product:** Apache
 - **Affected Versions:** 2.4.0 - 2.4.46 (inclusive)
