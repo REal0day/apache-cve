@@ -9,7 +9,7 @@ A concise summary of the vulnerability should be provided here. This section mus
   - [LinkedIn](https://linkedin.com/in/cmagistrado)
 
 ## 1. Vulnerability Overview
-![Apache](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgm6T0bU5gevWfQqrcJcRruTmZoXP6DeNrSQ&s)
+![Apache](apache.png)
 - **CVE Identifier:** CVE-2021-26690
 - **Affected Product:** Apache
 - **Affected Versions:** 2.4.0 - 2.4.46 (inclusive)
@@ -19,8 +19,10 @@ A concise summary of the vulnerability should be provided here. This section mus
 - **CVSSv3 Score:** 7.5 (AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H)
 - **CVSSv3 Score:** 5.0 (AV:N/AC:L/Au:N/C:N/I:N/A:P)
 
+***
+
 ## 2. Technical Details
-![alt text](https://cwe.mitre.org/data/images/CWE-476-Diagram.png)
+![alt text](derefence.png)
 
 ### Vulnerable Code Identification
 ```C
@@ -325,10 +327,58 @@ Server-side, we can check the ```error_log``` and see the following:
 ```
 
 ### Root Cause Analysis
-- **Description:** The primary issue is the lack of input validation in the cookie parsing routine. The code assumes that every key will be paired with a valid value. When the value is missing (or the input is not properly formatted), the use of ```apr_strtok()``` returns NULL, and subsequent operations on this NULL pointer cause a crash.
+- **Description:** The primary issue is the lack of input validation in the cookie parsing routine. The code assumes that apr_strtok() will always return a valid pointer, but when parsing malformed input (such as an empty key-value pair at the end, e.g., &=), last becomes NULL. A subsequent call to apr_strtok(NULL, sep, &last) dereferences this NULL pointer, leading to a segmentation fault and crashing the server.
+
+#### Step-by-Step Analysis of the NULL Pointer Dereference
+1. ```last``` is initially set to NULL
+    ```C
+    char *last = NULL;
+    ```
+    This is fine because ```apr_strtok()``` uses it as a state-tracking variable.
+
+2. The first call to ```apr_strtok()```
+    ```C
+    pair = apr_strtok(encoded, sep, &last);
+    ```
+    This attempts to split ```encoded``` using ```sep``` (```&```).
+    ```last``` should now be updated to track the remainder of ```encoded```.
+
+    Scenario: If encoded is ```"expiry=AAAAA&=```"
+    - ```pair``` is assigned ```"expiry=AAAAA"```.
+    - ```last``` is updated to point to ```"="```.
+
+3. The second call to apr_strtok() (Key Extraction)
+    ```C
+    char *key = apr_strtok(pair, psep, &plast);
+    ```
+    - This attempts to **split** ```pair``` using ```psep``` (```=```).
+    - ```key``` is assigned ```"expiry"```.
+    - ```plast``` is updated to point to ```"AAAAA"```.
+    Nothing wrong here, let's continue.
+
+4. The third call to apr_strtok() (Value Extraction)
+    ```C
+    char *val = apr_strtok(NULL, psep, &plast);
+    ```
+
+    - Here’s where things go wrong.
+    - This attempts to extract the value (```val```).
+    - If ```pair``` has no value (e.g., ```"expiry="```), ```apr_strtok()``` returns NULL
+
+5. The second iteration of while (pair && pair[0])
+    ```C
+    pair = apr_strtok(NULL, sep, &last);
+    ```
+    - Now, we call ```apr_strtok(NULL, sep, &last)```, trying to get the next key-value pair.
+    - If last has already become NULL, ```apr_strtok()``` segfaults when it tries to use it.
+
+#### Why is the NULL Pointer Dereferenced?
+- ```last``` becomes NULL after parsing a malformed session string.
+- The second call to ```apr_strtok(NULL, sep, &last)``` then **tries to dereference a NULL pointer, causing a segmentation fault.**
 
 
-- **Impact of Exploitation:** When the server processes such a cookie, the absence of proper validation leads to a NULL pointer dereference, causing the Apache process handling the request to crash. Repeated exploitation can lead to a denial of service (DoS), affecting availability of the web service.
+### **Impact of Exploitation** 
+When the server processes such a cookie, the absence of proper validation leads to a NULL pointer dereference, causing the Apache process handling the request to crash. Repeated exploitation can lead to a denial of service (DoS), affecting availability of the web service.
 
 
 ## 3. Impact Analysis
