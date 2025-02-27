@@ -327,7 +327,7 @@ Server-side, we can check the ```error_log``` and see the following:
 ```
 
 ### Root Cause Analysis
-- **Description:** The primary issue is the lack of input validation in the cookie parsing routine. The code assumes that apr_strtok() will always return a valid pointer, but when parsing malformed input (such as an empty key-value pair at the end, e.g., &=), last becomes NULL. A subsequent call to apr_strtok(NULL, sep, &last) dereferences this NULL pointer, leading to a segmentation fault and crashing the server.
+- **Description:** The primary issue is the lack of input validation in the cookie parsing routine. The code assumes that ```apr_strtok()``` will always return a valid pointer, but when parsing malformed input (such as an empty key-value pair at the end, e.g., &=), last becomes NULL. A subsequent call to ```apr_strtok(NULL, sep, &last)``` dereferences this NULL pointer, leading to a segmentation fault and crashing the server.
 
 #### Step-by-Step Analysis of the NULL Pointer Dereference
 1. ```last``` is initially set to NULL
@@ -347,16 +347,17 @@ Server-side, we can check the ```error_log``` and see the following:
     - ```pair``` is assigned ```"expiry=AAAAA"```.
     - ```last``` is updated to point to ```"="```.
 
-3. The second call to apr_strtok() (Key Extraction)
+3. The second call to ```apr_strtok()``` (Key Extraction)
     ```C
     char *key = apr_strtok(pair, psep, &plast);
     ```
     - This attempts to **split** ```pair``` using ```psep``` (```=```).
     - ```key``` is assigned ```"expiry"```.
     - ```plast``` is updated to point to ```"AAAAA"```.
+
     Nothing wrong here, let's continue.
 
-4. The third call to apr_strtok() (Value Extraction)
+4. The third call to ```apr_strtok()``` (Value Extraction)
     ```C
     char *val = apr_strtok(NULL, psep, &plast);
     ```
