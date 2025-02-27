@@ -3,7 +3,7 @@
 ## Abstract
 A concise summary of the vulnerability should be provided here. This section must include:
 - **Affected Software:** Apache
-- **Description:** Versions of Apache allow for remote users to cause a DoS attack by crafting a cookie that exploits a NULL Pointer Dereference vulnerability.
+- **Description:** Certain versions of Apache allow remote users to cause a denial-of-service (DoS) attack by crafting a cookie that exploits a NULL pointer dereference vulnerability.
 
 ## 1. Vulnerability Overview
 - **CVE Identifier:** CVE-2021-26690
@@ -31,12 +31,16 @@ if (key && *key) {
 ```
 - **File Path(s):** `/httpd/modules/session/mod_session.c`
 - **Code Snippet Reference:** [Github](https://github.com/apache/httpd/blob/2.4.47/modules/session/mod_session.c#L388)
-- **Analysis:** The vulnerability starts in the code that splits a key-value pair using ```apr_strtok()``` with the "=" delimiter. When the input is malformed—for example, if a cookie string is missing a value after the "=" the function returns a NULL pointer for the value. Because the code does not handle this case properly, it later attempts to use a NULL value, which causes a segmentation fault.
+- **Analysis:** The vulnerability occurs in the logic that splits a cookie into key-value pairs using ```apr_strtok()``` with the "=" delimiter. When the cookie is malformed—for instance, if a value is missing after the "="—the function returns a NULL pointer for that value. Because the code does not properly handle this case, it later attempts to use the NULL pointer, resulting in a segmentation fault.
+
+
+  Here’s an example of an exploit payload that triggers the vulnerability:
+```session=expiry=AAAAAAAAAAA&=```
 
 ## 3. Exploiting CVE-2021-26690
 
 ### Environment
-I created a docker container with Apache version 2.4.18 installed on it to setup a test environment, with the goal of triggering the vulnerability.
+I created a Docker container with Apache version 2.4.18 installed on it to set up a test environment.
 
 #### Dockerfile
 ```Dockerfile
@@ -44,7 +48,7 @@ FROM httpd:2.4.41
 COPY conf/httpd.conf /usr/local/apache2/conf/httpd.conf
 ```
 
-Next I created a httpd.conf file to ensure mod_session was enabled.
+Next, I created an httpd.conf file to ensure that mod_session was enabled.
 ```bash
 LoadModule unixd_module modules/mod_unixd.so
 LoadModule authz_core_module modules/mod_authz_core.so
@@ -89,7 +93,7 @@ docker build -t apache2 .
 docker run -d -p 8080:8080 --name apache2 apache2
 ```
 
-Now that everything was up an running, I wanted to test thing everything on the client-side. In my exploit, I added features to thelp this.
+Now that everything was up and running, I wanted to test everything on the client side.In my exploit, I added features to help with this.
 
 ### My Exploit Code
 ```python
@@ -254,7 +258,11 @@ if __name__ == "__main__":
     exploit(args.target_url, args.threads)
 ```
 ### Summary of Exploit
-While testing, I wanted to also ensure I had the right version, so I built a scanner that will determine if the server is 1. Apache and 2. a version that has the vulnerability. After it determines this, it creates multiple threads, with the crafted payload ```session=expiry=AAAAAAAAAAA&=```. We send this as a cookie to trigger the NULL pointer dereference vulnerability. 
+While testing, I wanted to also ensure I had the right version, so I built a scanner that will determine the following:
+ 1. The Web Server is Apache
+ 2. The version is vulnerable. 
+ 
+ After it determines this, it creates multiple threads, with the crafted payload ```session=expiry=AAAAAAAAAAA&=```. We send this as a cookie to trigger the NULL pointer dereference vulnerability. 
 
 ### Result
 Client-side we see the following:
@@ -318,11 +326,21 @@ Server-side, we can check the ```error_log``` and see the following:
 
 
 ## 3. Impact Analysis
-- **Security Impact:** The vulnerability allows an attacker to remotely crash the Apache HTTP Server by exploiting the cookie parsing logic, leading to a denial of service. Though it doesn't allow for arbitrary code execution or unauthorized data access, it does impact **availability**.
+- **Security Impact:** The vulnerability allows an attacker to remotely crash the Apache HTTP Server by exploiting the cookie parsing logic, leading to a denial of service. Though it doesn't allow for arbitrary code execution or unauthorized data access, it does impact **availability**. And even though this flaw does not enable arbitrary code execution or unauthorized data access, it severely impacts service availability.
+
+Here are the CVSS 3.1 vectors for this vulnerability.
+
+  - **Attack Vector (AV:N):** The attack can be executed over the network.
+  - **Attack Complexity (AC:L):** The exploit requires minimal effort.
+  - **Privileges Required (PR:N):** No special privileges are needed.
+  - **User Interaction (UI:N):** The attack does not depend on any user interaction.
+  - **Scope (S:U):** The vulnerability is contained within the affected module.
+  - **Confidentiality (C:N) & Integrity (I:N):** There is no impact on data confidentiality or integrity.
+  - **Availability (A:H):** The primary effect is on availability, making the service inaccessible.
 
 - **Affected Components:** The affected component is the ```mod_session``` module of the Apache HTTP Server.
 
-- **Risk Assessment:** In terms of Confidentiality, Integrity, and Availability (CIA), if availability is one of the most critical components of your organization, it's recommended you increase the severity of this vulnearbility.
+- **Risk Assessment:** In terms of Confidentiality, Integrity, and Availability (CIA), if availability is one of the most critical components of your organization, it's recommended you increase the severity of this vulnerability.
 
 ## 4. **Current Impact (as of February 27th, 2025)**
 
@@ -351,16 +369,16 @@ if (key && *key) {
         apr_table_unset(z->entries, key);
     }
 ```
-- **The Patch:** Update to the latest version of Apache.
-- **Immediate Mitigation Measures:**
+### **The Patch:** Update to the latest version of [Apache](https://httpd.apache.org/download.cgi).
+### **Immediate Mitigation Measures:**
   - ### **Short-Term Actions:** 
     One mitigation is to turn on `mod_session_crypto` for the cookie. The cookie will be both encrypted and base64 encoded.
     ```apache
     <IfModule mod_session.c>
     Session On
     SessionCookieName session path=/
-    SessionCryptoPassphrase "YourSecurePassphrase"
-    SessionMaxAge 1800
+    SessionCryptoPassphrase "VeRySeCuRePaSsWoRd!"
+    SessionMaxAge 1000
     </IfModule>
     ```
     With this configuration, the session cookie pairs cannot be tampered with, which prevents the DoS attack from occurring as described.
@@ -451,9 +469,10 @@ if (key && *key) {
     ```
 
 
-- ### **Long-Term Remediation:**
+### **Long-Term Remediation:**
   - **Patch/Update Recommendations:** Updating to the latest version of apache, or at the very least a version that is > 2.4.46 .
-  - **Code Changes Overview:** The patch ensures that the code consistently uses the same delimiter for both key and value extraction, adds proper checks for NULL or empty values, and validates inputs through URL-decoding. This prevents malformed session entries from causing a NULL pointer dereference that could crash the server..
+  - **Code Changes Overview:** The patch refactors the function so that it only attempts to extract the value after confirming that a valid key was obtained. In the vulnerable code, the value is extracted immediately without first checking if the key is valid; if the key extraction fails or returns an empty string, the subsequent extraction might operate on invalid data, leading to a NULL pointer being processed. By moving the value extraction inside the ```if (key && *key)``` block, the patched code ensures that only well-formed key-value pairs are processed, preventing the potential for a null pointer dereference.
+
   - **Additional Recommendations:** Regular security audits, thorough code reviews, and adherence to secure coding best practices can help identify and remediate potential vulnerabilities early. Additionally, incorporating automated static analysis and runtime monitoring further minimizes the risk of similar issues in the future.
 
 ## 6. Timeline and Acknowledgments
@@ -467,7 +486,7 @@ if (key && *key) {
 - **Further Investigation – Other Vulnerabilities Fixed in the Same Patch:**
   1. **2019-10-05 (Moderate):** `mod_proxy_wstunnel` tunneling of non-upgraded connections (CVE-2019-17567)
   2. **2020-09-11 (Low):** `mod_proxy_http` NULL pointer dereference (CVE-2020-13950)
-  3. **2020-11-11 (Low):** `mod_auth_digest` possible stack overflow by one nul byte (CVE-2020-35452)
+  3. **2020-11-11 (Low):** `mod_auth_digest` possible stack overflow by one null byte (CVE-2020-35452)
   4. **2021-01-26 (Moderate):** Improper handling of insufficient privileges (CVE-2020-13938)
   5. **2021-03-01 (Low):** `mod_session` response handling heap overflow (CVE-2021-26691)
   6. **2021-04-14 (Moderate):** Unexpected URL matching with 'MergeSlashes OFF' (CVE-2021-30641)
@@ -476,8 +495,7 @@ if (key && *key) {
   - Both CVE-2021-26690 and CVE-2021-31618 have a CVSS score of 7.5.
   - It might be the case Apache marked CVE-2021-31618 as "important" due to the higher likelihood of exploitation, triggering a need for a patch, since CVE-2021-26690 was addressed as part of the broader 2.4.48 update.
 - **Credits:**
-  - Thank you Antonio Morales, @antonio-morales  for reporting this vulnerability
-  - Special thanks to apache, openwall, debian, fedora, gentoo, netapp, and oracle for creating advisories for this vulnerability. 
+Thank you, Antonio Morales (@antonio-morales), for reporting this vulnerability. Special thanks to Apache, Openwall, Debian, Fedora, Gentoo, NetApp, and Oracle for creating advisories for this vulnerability.
 
 ## 7. References
 - **Source Code Repository:** [Apache Github Commits](https://github.com/apache/httpd/commits/2.4.47/modules/session/mod_session.c)
