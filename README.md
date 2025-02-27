@@ -515,3 +515,8 @@ Thank you, Antonio Morales (@antonio-morales), for reporting this vulnerability.
 - **External Resources:** 
   - [NVD's Report](https://nvd.nist.gov/vuln/detail/cve-2021-26690)
   - [CWE-476: NULL Pointer Dereference Definition](https://cwe.mitre.org/data/definitions/476.html)
+- **Tools Used:** 
+  - [apache](https://httpd.apache.org/)
+  - [docker](https://www.docker.com/)
+  - [gdb](https://sourceware.org/gdb/)
+  - [shodan](https://www.shodan.io/)
