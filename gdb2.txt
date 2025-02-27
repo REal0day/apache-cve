@@ -1,0 +1,128 @@
+# gdb -p 2946
+GNU gdb (Debian 8.2.1-2+b3) 8.2.1
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+  File "~/.gef-2025.01.py", line 11490
+    match self:
+             ^
+SyntaxError: invalid syntax
+Attaching to process 2946
+Reading symbols from /usr/local/apache2/bin/httpd...done.
+Reading symbols from /lib/x86_64-linux-gnu/libpcre.so.3...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libaprutil-1.so.0...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libapr-1.so.0...(no debugging symbols found)...done.
+Reading symbols from /lib/x86_64-linux-gnu/libpthread.so.0...Reading symbols from /usr/lib/debug/.build-id/48/041452aef93ddb2366ca0fa49da8f32684a9c8.debug...done.
+done.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Reading symbols from /lib/x86_64-linux-gnu/libc.so.6...Reading symbols from /usr/lib/debug/.build-id/3d/d0d437484db11c9d9f4e53cc880f264ebaf1da.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libuuid.so.1...(no debugging symbols found)...done.
+Reading symbols from /lib/x86_64-linux-gnu/librt.so.1...Reading symbols from /usr/lib/debug/.build-id/c8/899aec85ac923281dfa7ad96e261b772c0be85.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libcrypt.so.1...Reading symbols from /usr/lib/debug/.build-id/ab/1fafcec71661f0b251193cc9886c2acf2b59be.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libdl.so.2...Reading symbols from /usr/lib/debug/.build-id/e0/a26233adbeaa08de07d76dbaacd9c3ff5b18f9.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libexpat.so.1...(no debugging symbols found)...done.
+Reading symbols from /lib64/ld-linux-x86-64.so.2...Reading symbols from /usr/lib/debug/.build-id/83/743ddd4258a7d138a28c4f2032d17ad92a15b5.debug...done.
+done.
+Reading symbols from /usr/local/apache2/modules/mod_unixd.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_authz_core.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_mpm_prefork.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_dir.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_log_config.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_session.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_session_cookie.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_session_crypto.so...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/apr-util-1/apr_crypto_openssl-1.so...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libssl.so.1.1...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1...(no debugging symbols found)...done.
+Reading symbols from /lib/x86_64-linux-gnu/libnss_files.so.2...Reading symbols from /usr/lib/debug/.build-id/d7/cfd27ca5fda4bde8f71998d7384810ae8406af.debug...done.
+done.
+0x00007f5814fa9947 in accept4 (fd=3, addr=..., addr_len=0x7ffd27351de0, flags=524288) at ../sysdeps/unix/sysv/linux/accept4.c:32
+32      ../sysdeps/unix/sysv/linux/accept4.c: No such file or directory.
+(gdb) break session_identity_decode
+Breakpoint 1 at 0x7f5814db6490: file mod_session.c, line 389.
+(gdb) c
+Continuing.
+
+Breakpoint 1, session_identity_decode (r=0x7f58149fc0a0, z=0x7f58149fde20) at mod_session.c:389
+389     mod_session.c: No such file or directory.
+(gdb) print z
+$1 = (session_rec *) 0x7f58149fde20
+(gdb) print z->encoded
+$2 = 0x7f58149fde08 "expiry=", 'A' <repeats 11 times>, "&="
+(gdb) print encoded
+$3 = <optimized out>
+(gdb) print *encoded
+value has been optimized out
+(gdb) print pair
+$4 = <optimized out>
+(gdb) print *pair
+value has been optimized out
+(gdb) print last
+$5 = 0x7f5814db0629 <session_cookie_load+377> "1\300\351=\377\377\377\270\377\377\377\377\351\063\377\377\377\350\021\372\377\377\220ATI\211\374UH\211\365SH\205\322t\032\200:"
+(gdb) print *last  
+$6 = 49 '1'
+(gdb) step
+391     in mod_session.c
+(gdb) print z
+$7 = (session_rec *) 0x7f58149fde20
+(gdb) print z->encoded
+$8 = 0x7f58149fde08 "expiry=", 'A' <repeats 11 times>, "&="
+(gdb) print encoded
+$9 = <optimized out>
+(gdb) print *encoded
+value has been optimized out
+(gdb) print pair
+$10 = <optimized out>
+(gdb) print *pair
+value has been optimized out
+(gdb) print last
+$11 = 0x7f5814db0629 <session_cookie_load+377> "1\300\351=\377\377\377\270\377\377\377\377\351\063\377\377\377\350\021\372\377\377\220ATI\211\374UH\211\365SH\205\322t\032\200:"
+(gdb) print *last
+$12 = 49 '1'
+(gdb) step
+396     in mod_session.c
+(gdb) print {z, z->encoded, encoded, *encoded, pair, *pair, last, *last}
+value has been optimized out
+(gdb) define nxt
+Type commands for definition of "nxt".
+End with a line saying just "end".
+>step
+>print z
+>print z->encoded
+>print encoded
+>print *encoded
+>print pair
+>print *pair
+>print last
+>print *last
+>end
+(gdb) nxt
+401     in mod_session.c
+$13 = (session_rec *) 0x7f58149fde20
+$14 = 0x7f58149fde08 "expiry=", 'A' <repeats 11 times>, "&="
+$15 = <optimized out>
+value has been optimized out
+(gdb) print pair
+$16 = <optimized out>
+(gdb) print *pair
+value has been optimized out
+(gdb) print last
+$17 = 0x0
+(gdb) print *last
+Cannot access memory at address 0x0

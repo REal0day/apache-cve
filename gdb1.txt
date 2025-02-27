@@ -1,0 +1,137 @@
+# ps aux | grep httpd
+root         1  0.0  0.0   8848  6020 ?        Ss   22:13   0:00 httpd -DFOREGROUND
+root      2881  0.0  0.0   8956  3304 ?        S    22:19   0:00 httpd -DFOREGROUND
+root      2882  0.0  0.0   8956  3304 ?        S    22:19   0:00 httpd -DFOREGROUND
+root      2883  0.0  0.0   8956  3304 ?        S    22:19   0:00 httpd -DFOREGROUND
+root      2884  0.0  0.0   8956  3304 ?        S    22:19   0:00 httpd -DFOREGROUND
+root      2885  0.0  0.0   8956  3304 ?        S    22:19   0:00 httpd -DFOREGROUND
+root      2887  0.0  0.0   3084   828 pts/0    S+   22:22   0:00 grep httpd
+# gdb -p 2881
+GNU gdb (Debian 8.2.1-2+b3) 8.2.1
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+  File "~/.gef-2025.01.py", line 11490
+    match self:
+             ^
+SyntaxError: invalid syntax
+Attaching to process 2881
+Reading symbols from /usr/local/apache2/bin/httpd...done.
+Reading symbols from /lib/x86_64-linux-gnu/libpcre.so.3...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libaprutil-1.so.0...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libapr-1.so.0...(no debugging symbols found)...done.
+Reading symbols from /lib/x86_64-linux-gnu/libpthread.so.0...Reading symbols from /usr/lib/debug/.build-id/48/041452aef93ddb2366ca0fa49da8f32684a9c8.debug...done.
+done.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Reading symbols from /lib/x86_64-linux-gnu/libc.so.6...Reading symbols from /usr/lib/debug/.build-id/3d/d0d437484db11c9d9f4e53cc880f264ebaf1da.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libuuid.so.1...(no debugging symbols found)...done.
+Reading symbols from /lib/x86_64-linux-gnu/librt.so.1...Reading symbols from /usr/lib/debug/.build-id/c8/899aec85ac923281dfa7ad96e261b772c0be85.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libcrypt.so.1...Reading symbols from /usr/lib/debug/.build-id/ab/1fafcec71661f0b251193cc9886c2acf2b59be.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libdl.so.2...Reading symbols from /usr/lib/debug/.build-id/e0/a26233adbeaa08de07d76dbaacd9c3ff5b18f9.debug...done.
+done.
+Reading symbols from /lib/x86_64-linux-gnu/libexpat.so.1...(no debugging symbols found)...done.
+Reading symbols from /lib64/ld-linux-x86-64.so.2...Reading symbols from /usr/lib/debug/.build-id/83/743ddd4258a7d138a28c4f2032d17ad92a15b5.debug...done.
+done.
+Reading symbols from /usr/local/apache2/modules/mod_unixd.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_authz_core.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_mpm_prefork.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_dir.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_log_config.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_session.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_session_cookie.so...done.
+Reading symbols from /usr/local/apache2/modules/mod_session_crypto.so...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/apr-util-1/apr_crypto_openssl-1.so...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libssl.so.1.1...(no debugging symbols found)...done.
+Reading symbols from /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1...(no debugging symbols found)...done.
+Reading symbols from /lib/x86_64-linux-gnu/libnss_files.so.2...Reading symbols from /usr/lib/debug/.build-id/d7/cfd27ca5fda4bde8f71998d7384810ae8406af.debug...done.
+done.
+0x00007f5814fa9947 in accept4 (fd=3, addr=..., addr_len=0x7ffd27351de0, flags=524288) at ../sysdeps/unix/sysv/linux/accept4.c:32
+32      ../sysdeps/unix/sysv/linux/accept4.c: No such file or directory.
+(gdb) set follow-fork-mode child
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00007f58150a560c in apr_strtok () from /usr/lib/x86_64-linux-gnu/libapr-1.so.0
+(gdb) backtrace
+#0  0x00007f58150a560c in apr_strtok () from /usr/lib/x86_64-linux-gnu/libapr-1.so.0
+#1  0x00007f5814db6562 in session_identity_decode (r=<optimized out>, z=0x7f58149fde20) at mod_session.c:407
+#2  0x00007f5814db71db in ap_run_session_decode (r=r@entry=0x7f58149fc0a0, z=0x7f58149fde20) at mod_session.c:40
+#3  0x00007f5814db742a in ap_session_load (r=r@entry=0x7f58149fc0a0, z=z@entry=0x7ffd27351da0) at mod_session.c:132
+#4  0x00007f5814db775f in session_fixups (r=0x7f58149fc0a0) at mod_session.c:526
+#5  0x00005566dfbdae40 in ap_run_fixups (r=r@entry=0x7f58149fc0a0) at request.c:83
+#6  0x00005566dfbdd55a in ap_process_request_internal (r=0x7f58149fc0a0) at request.c:366
+#7  0x00005566dfbfb9e0 in ap_process_async_request (r=0x7f58149fc0a0) at http_request.c:451
+#8  0x00005566dfbfbb5e in ap_process_request (r=r@entry=0x7f58149fc0a0) at http_request.c:488
+#9  0x00005566dfbf7d7e in ap_process_http_sync_connection (c=0x7f5814d93290) at http_core.c:214
+#10 ap_process_http_connection (c=0x7f5814d93290) at http_core.c:255
+#11 0x00005566dfbee880 in ap_run_process_connection (c=c@entry=0x7f5814d93290) at connection.c:42
+#12 0x00005566dfbeede0 in ap_process_connection (c=c@entry=0x7f5814d93290, csd=<optimized out>) at connection.c:219
+#13 0x00007f5814dd13df in child_main (child_num_arg=child_num_arg@entry=6, child_bucket=child_bucket@entry=0) at prefork.c:615
+#14 0x00007f5814dd16d4 in make_child (s=0x7f5814df0110, slot=6) at prefork.c:717
+#15 0x00007f5814dd23bf in perform_idle_server_maintenance (p=<optimized out>) at prefork.c:821
+#16 prefork_run (_pconf=<optimized out>, plog=<optimized out>, s=<optimized out>) at prefork.c:1014
+#17 0x00005566dfbc7b8e in ap_run_mpm (pconf=0x7f5814e18028, plog=0x7f5814dec028, s=0x7f5814df0110) at mpm_common.c:94
+#18 0x00005566dfbbfe27 in main (argc=<optimized out>, argv=<optimized out>) at main.c:819
+(gdb) info reg
+rax            0x0                 0
+rbx            0x7f5814db8002      140016283779074
+rcx            0x2                 2
+rdx            0x7ffd27351cb0      140725261245616
+rsi            0x7f5814db8002      140016283779074
+rdi            0x0                 0
+rbp            0x0                 0x0
+rsp            0x7ffd27351c60      0x7ffd27351c60
+r8             0x7f58149e311f      140016279761183
+r9             0x0                 0
+r10            0x7f5815019ae0      140016286276320
+r11            0x7f581501a3e0      140016286278624
+r12            0x7f5814db8002      140016283779074
+r13            0x7ffd27351cb0      140725261245616
+r14            0x7f58149fde20      140016279871008
+r15            0x0                 0
+rip            0x7f58150a560c      0x7f58150a560c <apr_strtok+28>
+eflags         0x10246             [ PF ZF IF RF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+(gdb) p pair
+No symbol "pair" in current context.
+(gdb) p *pair
+No symbol "pair" in current context.
+(gdb) p z
+No symbol "z" in current context.
+(gdb) print z
+No symbol "z" in current context.
+(gdb) print z->encoded
+No symbol "z" in current context.
+(gdb) frame 1
+#1  0x00007f5814db6562 in session_identity_decode (r=<optimized out>, z=0x7f58149fde20) at mod_session.c:407
+407     mod_session.c: No such file or directory.
+(gdb) print z
+$1 = (session_rec *) 0x7f58149fde20
+(gdb) print z->encoded
+$2 = 0x7f58149fde08 "expiry=", 'A' <repeats 11 times>, "&="
+(gdb) print encoded
+$3 = <optimized out>
+(gdb) print *encoded
+value has been optimized out
+(gdb) 
