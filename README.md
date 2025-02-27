@@ -34,7 +34,9 @@ if (key && *key) {
     }
 ```
 - **File Path(s):** `/httpd/modules/session/mod_session.c`
-- **Code Snippet Reference:** [Github](https://github.com/apache/httpd/blob/2.4.47/modules/session/mod_session.c#L388)
+- **Code Snippet Reference:** 
+  - [Vulnerable Code](https://github.com/apache/httpd/commit/97c9e9d66cd2520e8d76d278368f15227f9cc5c5)
+  - [Patch](https://github.com/apache/httpd/blob/2.4.47/modules/session/mod_session.c#L388)
 - **Analysis:** The vulnerability occurs in the logic that splits a cookie into key-value pairs using ```apr_strtok()``` with the "=" delimiter. When the cookie is malformed—for instance, if a value is missing after the "="—the function returns a NULL pointer for that value. Because the code does not properly handle this case, it later attempts to use the NULL pointer, resulting in a segmentation fault.
 
 
