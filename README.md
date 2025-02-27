@@ -327,7 +327,7 @@ Server-side, we can check the ```error_log``` and see the following:
 ```
 
 ### Root Cause Analysis
-- **Description:** The primary issue is the lack of input validation in the cookie parsing routine. The code assumes that ```apr_strtok()``` will always return a valid pointer, but when parsing malformed input (such as an empty key-value pair at the end, e.g., &=), last becomes NULL. A subsequent call to ```apr_strtok(NULL, sep, &last)``` dereferences this NULL pointer, leading to a segmentation fault and crashing the server.
+- **Description:** The primary issue is the lack of input validation in the cookie parsing routine. The code assumes that ```apr_strtok()``` will always return a valid pointer, but when parsing malformed input (```&=```), last becomes NULL. A subsequent call to ```apr_strtok(NULL, sep, &last)``` dereferences this NULL pointer, leading to a segmentation fault and crashing the server.
 
 #### Step-by-Step Analysis of the NULL Pointer Dereference
 1. ```last``` is initially set to NULL
